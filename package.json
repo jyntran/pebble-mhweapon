@@ -1,12 +1,12 @@
 {
-  "name": "Poogie",
+  "name": "Monster Hunter Weapon",
   "author": "jyntran",
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "poogie",
+    "displayName": "MHweapon",
     "uuid": "da05ec9f-fe2b-4587-9f28-ecabda1c6a4b",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -19,49 +19,24 @@
     "watchapp": {
       "watchface": true
     },
+    "capabilities": [
+      "health"
+    ],
     "messageKeys": [
       "dummy"
     ],
     "resources": {
       "media": [
         {
-            "file": "images/poogie.png",
-            "name": "IMAGE_POOGIE",
+            "file": "images/huntinghorn.png",
+            "name": "IMAGE_HUNTINGHORN",
             "storageFormat": "png",
             "targetPlatforms": null,
             "type": "bitmap"
         },
         {
-            "file": "images/poogiebw.png",
-            "name": "IMAGE_POOGIEBW",
-            "storageFormat": "png",
-            "targetPlatforms": null,
-            "type": "bitmap"
-        },
-        {
-            "file": "images/poogie_angry.png",
-            "name": "IMAGE_POOGIE_ANGRY",
-            "storageFormat": "png",
-            "targetPlatforms": null,
-            "type": "bitmap"
-        },
-        {
-            "file": "images/poogiebw_angry.png",
-            "name": "IMAGE_POOGIEBW_ANGRY",
-            "storageFormat": "png",
-            "targetPlatforms": null,
-            "type": "bitmap"
-        },
-        {
-            "file": "images/poogie_heart.png",
-            "name": "IMAGE_POOGIE_HEART",
-            "storageFormat": "png",
-            "targetPlatforms": null,
-            "type": "bitmap"
-        },
-        {
-            "file": "images/poogiebw_heart.png",
-            "name": "IMAGE_POOGIEBW_HEART",
+            "file": "images/huntinghorn_bw.png",
+            "name": "IMAGE_HUNTINGHORN_BW",
             "storageFormat": "png",
             "targetPlatforms": null,
             "type": "bitmap"

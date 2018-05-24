@@ -2,16 +2,16 @@
 
 static Window *s_window;
 static TextLayer *s_time_layer,
-                 *s_date_layer;
+                 *s_date_layer,
+                 *s_step_layer;
 static BitmapLayer *s_background_layer;
-static GBitmap *s_bitmap_poogie,
-               *s_bitmap_poogie_angry,
-               *s_bitmap_poogie_heart;
+static GBitmap *s_bitmap_weapon;
 static BitmapLayer *s_battery_layer;
 static GBitmap *s_bitmap_battery;
 static Layer *s_batt_layer;
 
 static int s_battery_level;
+static int s_step_count;
 
 static void update_time() {
   time_t temp = time(NULL);
@@ -20,8 +20,6 @@ static void update_time() {
   strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?
                                           "%H:%M" : "%I:%M", tick_time);
   text_layer_set_text(s_time_layer, s_buffer);
-
-  bitmap_layer_set_bitmap(s_background_layer, s_bitmap_poogie);
 }
 
 static void update_date() {
@@ -102,9 +100,49 @@ static void bluetooth_callback(bool connected) {
       .num_segments = ARRAY_LENGTH(segments),
     };
     vibes_enqueue_custom_pattern(pat);
-    bitmap_layer_set_bitmap(s_background_layer, s_bitmap_poogie_angry);
+  }
+}
+
+static void update_steps() {
+  HealthMetric metric = HealthMetricStepCount;
+  time_t start = time_start_of_today();
+  time_t end = time(NULL);
+
+  HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
+    start, end);
+
+  if(mask & HealthServiceAccessibilityMaskAvailable) {
+    s_step_count = (int)health_service_sum_today(metric);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Steps today: %d", s_step_count);
+    static char s_buffer[32];
+    snprintf(s_buffer, sizeof(s_buffer), "%d steps", s_step_count);    
+    text_layer_set_text(s_step_layer, s_buffer);
   } else {
-    bitmap_layer_set_bitmap(s_background_layer, s_bitmap_poogie_heart);
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+  }
+}
+
+static void health_callback(HealthEventType event, void *context) {
+  switch(event) {
+    case HealthEventSignificantUpdate:
+      APP_LOG(APP_LOG_LEVEL_INFO, 
+              "New HealthService HealthEventSignificantUpdate event");
+      break;
+    case HealthEventMovementUpdate:
+      APP_LOG(APP_LOG_LEVEL_INFO, 
+              "New HealthService HealthEventMovementUpdate event");
+      update_steps();
+      break;
+    case HealthEventSleepUpdate:
+      APP_LOG(APP_LOG_LEVEL_INFO, 
+              "New HealthService HealthEventSleepUpdate event");
+      break;
+    case HealthEventHeartRateUpdate:
+      APP_LOG(APP_LOG_LEVEL_INFO,
+              "New HealthService HealthEventHeartRateUpdate event");
+      break;
+    default:
+      break;
   }
 }
 
@@ -112,29 +150,35 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  s_background_layer = bitmap_layer_create(GRect(0, PBL_IF_ROUND_ELSE(33, 20), bounds.size.w, 65));
+  s_background_layer = bitmap_layer_create(GRect(0, PBL_IF_ROUND_ELSE(40, 27), bounds.size.w, 65));
   bitmap_layer_set_compositing_mode(s_background_layer, GCompOpSet);
-  s_bitmap_poogie = gbitmap_create_with_resource(PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_POOGIEBW, RESOURCE_ID_IMAGE_POOGIE));
-  s_bitmap_poogie_angry = gbitmap_create_with_resource(PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_POOGIEBW_ANGRY, RESOURCE_ID_IMAGE_POOGIE_ANGRY));
-  s_bitmap_poogie_heart = gbitmap_create_with_resource(PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_POOGIEBW_HEART, RESOURCE_ID_IMAGE_POOGIE_HEART));
-  bitmap_layer_set_bitmap(s_background_layer, s_bitmap_poogie);
+  s_bitmap_weapon = gbitmap_create_with_resource(PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_HUNTINGHORN_BW, RESOURCE_ID_IMAGE_HUNTINGHORN));
+  bitmap_layer_set_bitmap(s_background_layer, s_bitmap_weapon);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
 
-  s_time_layer = text_layer_create(GRect(0, bounds.size.h-85, bounds.size.w, 40));
-  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS));
+  s_time_layer = text_layer_create(GRect(0, bounds.size.h-80, bounds.size.w, 40));
+  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   text_layer_set_background_color(s_time_layer, GColorClear);
   text_layer_set_text_color(s_time_layer, GColorBlack);
   update_time();
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 
-  s_date_layer = text_layer_create(GRect(0, bounds.size.h-50, bounds.size.w, 40));
+  s_date_layer = text_layer_create(GRect(0, bounds.size.h-60, bounds.size.w, 35));
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
   text_layer_set_background_color(s_date_layer, GColorClear);
   text_layer_set_text_color(s_date_layer, GColorBlack);
   update_date();
   layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
+
+  s_step_layer = text_layer_create(GRect(0, bounds.size.h-30, bounds.size.w, 25));
+  text_layer_set_font(s_step_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(s_step_layer, GTextAlignmentCenter);
+  text_layer_set_background_color(s_step_layer, GColorClear);
+  text_layer_set_text_color(s_step_layer, GColorBlack);
+  update_steps();
+  layer_add_child(window_layer, text_layer_get_layer(s_step_layer));
 
   s_battery_layer = bitmap_layer_create(GRect(0, PBL_IF_ROUND_ELSE(15, 2), bounds.size.w, 25));
   bitmap_layer_set_compositing_mode(s_battery_layer, GCompOpSet);
@@ -152,12 +196,11 @@ static void prv_window_load(Window *window) {
 }
 
 static void prv_window_unload(Window *window) {
-  gbitmap_destroy(s_bitmap_poogie);
-  gbitmap_destroy(s_bitmap_poogie_angry);
-  gbitmap_destroy(s_bitmap_poogie_heart);
+  gbitmap_destroy(s_bitmap_weapon);
   gbitmap_destroy(s_bitmap_battery);
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_date_layer);
+  text_layer_destroy(s_step_layer);
   bitmap_layer_destroy(s_background_layer);
   bitmap_layer_destroy(s_battery_layer);
 }
@@ -168,6 +211,16 @@ static void prv_init(void) {
   connection_service_subscribe((ConnectionHandlers) {
     .pebble_app_connection_handler = bluetooth_callback
   });
+  
+  #if defined(PBL_HEALTH)
+  // Attempt to subscribe 
+  if(!health_service_events_subscribe(health_callback, NULL)) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+  }
+  #else
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+  #endif
+
   s_window = window_create();
   window_set_window_handlers(s_window, (WindowHandlers) {
     .load = prv_window_load,
@@ -182,6 +235,7 @@ static void prv_deinit(void) {
   tick_timer_service_unsubscribe();
   connection_service_unsubscribe();
   battery_state_service_unsubscribe();
+  health_service_events_unsubscribe();
 }
 
 int main(void) {
