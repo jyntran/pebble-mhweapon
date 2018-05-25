@@ -1,4 +1,4 @@
-#include <pebble.h>
+#include "gbitmap_color_palette_manipulator.h"
 
 static Window *s_window;
 static TextLayer *s_time_layer,
@@ -152,8 +152,14 @@ static void prv_window_load(Window *window) {
 
   s_background_layer = bitmap_layer_create(GRect(0, PBL_IF_ROUND_ELSE(40, 27), bounds.size.w, 65));
   bitmap_layer_set_compositing_mode(s_background_layer, GCompOpSet);
-  s_bitmap_weapon = gbitmap_create_with_resource(PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_HUNTINGHORN_BW, RESOURCE_ID_IMAGE_HUNTINGHORN));
+  s_bitmap_weapon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_HUNTINGHORN);
+  #ifdef PBL_COLOR
   bitmap_layer_set_bitmap(s_background_layer, s_bitmap_weapon);
+  spit_gbitmap_color_palette(s_bitmap_weapon);
+  if (gbitmap_color_palette_contains_color(GColorWhite, s_bitmap_weapon)) {
+    replace_gbitmap_color(GColorWhite, GColorRed, s_bitmap_weapon, s_background_layer);
+  }
+  #endif
   layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
 
   s_time_layer = text_layer_create(GRect(0, bounds.size.h-80, bounds.size.w, 40));
@@ -164,7 +170,7 @@ static void prv_window_load(Window *window) {
   update_time();
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 
-  s_date_layer = text_layer_create(GRect(0, bounds.size.h-60, bounds.size.w, 35));
+  s_date_layer = text_layer_create(GRect(0, bounds.size.h-56, bounds.size.w, 35));
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
   text_layer_set_background_color(s_date_layer, GColorClear);

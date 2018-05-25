@@ -28,15 +28,15 @@
     "resources": {
       "media": [
         {
-            "file": "images/huntinghorn.png",
+            "file": "images/weapon032_60.png",
             "name": "IMAGE_HUNTINGHORN",
             "storageFormat": "png",
             "targetPlatforms": null,
             "type": "bitmap"
         },
         {
-            "file": "images/huntinghorn_bw.png",
-            "name": "IMAGE_HUNTINGHORN_BW",
+            "file": "images/weapon057_60.png",
+            "name": "IMAGE_HAMMER",
             "storageFormat": "png",
             "targetPlatforms": null,
             "type": "bitmap"
